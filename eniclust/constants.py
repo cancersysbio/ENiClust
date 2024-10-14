@@ -37,5 +37,3 @@ hgbuild_map = {
             'hg19':  os.path.join(get_data_dir(), 'general/hg19.chrom.sizes.txt'),
             'hg38':  os.path.join(get_data_dir(), 'general/hg38.chrom.sizes.txt')
             }
-
-cohort_ref = pd.read_csv(os.path.join(get_data_dir(), 'general/cohort_ref.txt'), sep = '\t')
