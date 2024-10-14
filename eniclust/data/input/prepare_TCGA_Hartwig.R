@@ -54,20 +54,8 @@ qc_file[,c('Sample', 'genome_doubled', 'ploidy', 'hrd_loh', 'fraction_cna')]
 head(qc_file[,'Sample'])
 tail(qc_file[,'Sample'])
 
-## 04
-mutations_file_tcga = read.table("/oak/stanford/groups/ccurtis2/users/srinivap/Work/Projects/TCGA/mutations_tp53_pik3ca_cdh1.txt", sep = '\t', header = T)
-mutations_file_tcga$specimen = str_sub(mutations_file_tcga$specimen,1,12)
-colnames(mutations_file_tcga)[1] = "Sample"
-mutations_file_hmf = read.table("/oak/stanford/groups/ccurtis2/users/lisem/eniclust/wes_wgs/data/Hartwig/mutation_status.txt", sep = '\t', header = T)
-
-mutations_file = rbind(mutations_file_tcga, mutations_file_hmf)
-head(mutations_file[,'Sample'])
-tail(mutations_file[,'Sample'])
-
 ## 05
 receptors_file_tcga = read.table("/oak/stanford/groups/ccurtis2/users/srinivap/Work/Projects/TCGA/samples_labels.txt", sep = ",", header = T)
-to_rm = c("TCGA-A7-A13E-01A-11R-A277-07","TCGA-A7-A13E-01B-06R-A277-07","TCGA-BH-A1FE-01A-11R-A13Q-07")
-receptors_file_tcga = receptors_file_tcga[which(!receptors_file_tcga$ID %in% to_rm),]
 any(duplicated(str_sub(receptors_file_tcga$ID,1,12)))
 receptors_file_tcga = data.frame(Sample = str_sub(receptors_file_tcga$ID,1,12), ER = receptors_file_tcga$ER, HER2 = receptors_file_tcga$HER2, stringsAsFactors = F)
 receptors_file_tcga = receptors_file_tcga[which(!duplicated(receptors_file_tcga$Sample)),]
@@ -96,13 +84,6 @@ reference_file = data.frame(Sample = mysamples, ic10 = NA, stringsAsFactors = F)
 reference_file$ic10 = sapply(reference_file$Sample, function(x) if(x %in% tcga_ref$Sample){tcga_ref$iC10[which(tcga_ref$Sample == x)]}else{hmf_ref$iC10[which(hmf_ref$Sample == x)]})
 any(is.na(reference_file$ic10))
 
-## Remove outliers, not enough consent, no matched ID
-to_rm = c('TCGA-AR-A0TQ', 'TCGA-C8-A135',"DRUP01020002T","CPCT02130024T", "CPCT02080177T", "CPCT02080175T", "CPCT02210040T", "CPCT02210039T", "CPCT02030426T")
-
-mysamples = mysamples[which(!mysamples %in% to_rm)]
-length(mysamples[which(grepl("TCGA",mysamples))])
-length(mysamples[which(!grepl("TCGA",mysamples))])
-
 ## Loading set of sample
 training_testing = read.table('/oak/stanford/groups/ccurtis2/users/lisem/eniclust/wes_wgs/dev/test/rand/rand_59_cv_noLOW_v3/Pipeline_2/training_and_testing_set.txt', header = T)
 validation = read.table('/oak/stanford/groups/ccurtis2/users/lisem/eniclust/wes_wgs/dev/test/rand/rand_59_cv_noLOW_v3/Pipeline_2/validation_set.txt', header = T)
@@ -129,55 +110,3 @@ write.table(segments_file[which(segments_file$Sample %in% mysamples),], paste(ou
 write.table(qc_file[which(qc_file$Sample %in% mysamples),], paste(outdir, "03_qc.txt", sep=""), sep="\t", row.names=F, quote=F)
 write.table(receptors_file[which(receptors_file$Sample %in% mysamples),], paste(outdir, "05_receptors.txt", sep=""), sep="\t", row.names=F, quote=F)
 write.table(reference_file[which(reference_file$Sample %in% mysamples),], paste(outdir, "ic10_references.txt", sep=""), sep="\t", row.names=F, quote=F)
-
-## Re-ordering
-tcga_set = read.table('/oak/stanford/groups/ccurtis2/users/lisem/eniclust/wes_wgs/dev/data/tcga_ic_10_alias_hrd_mut_corr.txt', header = T)
-hmf_set = read.table('/oak/stanford/groups/ccurtis2/users/lisem/eniclust/wes_wgs/dev/data/hmf_ic_10_alias_hrd_mut_corr.txt', header = T)
-table(hmf_set$Sample %in% hmf_ref$Sample)
-hmf_set = hmf_set[which(hmf_set$Sample %in% hmf_ref$Sample),]
-
-mysamples = c(tcga_set$Sample[which(tcga_set$Sample %in% mysamples)], hmf_set$Sample[which(hmf_set$Sample %in% mysamples)])
-length(mysamples[which(grepl("TCGA",mysamples))])
-length(mysamples[which(!grepl("TCGA",mysamples))])
-
-all(tcga_set$Sample[which(!tcga_set$Sample %in% to_rm)] == mysamples[1:1013])
-all(hmf_set$Sample[which(!hmf_set$Sample %in% to_rm)] == mysamples[1014:length(mysamples)])
-
-gene_cn_data_set = gene_cn_data[which(gene_cn_data$Sample %in% mysamples),]
-gene_cn_data_set = gene_cn_data_set[order(match(gene_cn_data_set$Sample, mysamples)),]
-all(gene_cn_data_set$Sample == mysamples)
-
-segments_file_set = segments_file[which(segments_file$Sample %in% mysamples),]
-segments_file_set = segments_file_set[order(match(segments_file_set$Sample, mysamples)),]
-all(unique(segments_file_set$Sample) == mysamples)
-
-qc_file_set = qc_file[which(qc_file$Sample %in% mysamples),]
-qc_file_set = qc_file_set[order(match(qc_file_set$Sample, mysamples)),]
-all(qc_file_set$Sample == mysamples)
-
-receptors_file_set = receptors_file[which(receptors_file$Sample %in% mysamples),]
-receptors_file_set = receptors_file_set[order(match(receptors_file_set$Sample, mysamples)),]
-all(receptors_file_set$Sample == mysamples)
-
-reference_file_set = reference_file[which(reference_file$Sample %in% mysamples),]
-reference_file_set = reference_file_set[order(match(reference_file_set$Sample, mysamples)),]
-all(reference_file_set$Sample == mysamples)
-
-write.table(gene_cn_data_set, paste(outdir, "01_gene_level.txt", sep=""), sep="\t", row.names=F, quote=F)
-write.table(segments_file_set, paste(outdir, "02_segments.txt", sep=""), sep="\t", row.names=F, quote=F)
-write.table(qc_file_set, paste(outdir, "03_qc.txt", sep=""), sep="\t", row.names=F, quote=F)
-write.table(receptors_file_set, paste(outdir, "05_receptors.txt", sep=""), sep="\t", row.names=F, quote=F)
-write.table(reference_file_set, paste(outdir, "ic10_references.txt", sep=""), sep="\t", row.names=F, quote=F)
-
-mysamples[1:1000]
-mysamples[1001:1013]
-mysamples[1014:length(mysamples)]
-
-data_set = read.table("/oak/stanford/groups/ccurtis2/users/lisem/git_repo/ENiClust/eniclust/data/results/data_set.txt", header = T, sep = "\t")
-dim(data_set)
-all(data_set$Sample == mysamples)
-all(data_set$Sample == reference_file_set$Sample)
-
-tcga_hmf_set = read.table("/oak/stanford/groups/ccurtis2/users/lisem/eniclust/wes_wgs/dev/test/rand/rand_59_cv_noLOW_v3/Pipeline_2/tcga_hmf_transformed_matrix.txt", header = T, sep = "\t")
-length(tcga_hmf_set$Sample)
-all(tcga_hmf_set$Sample == mysamples[1014:length(mysamples)])
