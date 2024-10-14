@@ -404,15 +404,6 @@ class PreProc:
 
         if ~(split_training_set):
             
-            # Gene-level CN features
-            columns_to_check = self.selected_genes['genes'].tolist()
-            print("Max CN of the outlier genes: ", str(max([max(ic10_data[ic10_data[x] > (constants.cohort_ref[x].quantile(0.75) + (constants.cohort_ref[x].quantile(0.75) - constants.cohort_ref[x].quantile(0.25))*3)][x]) for x in columns_to_check if (ic10_data[x] > (constants.cohort_ref[x].quantile(0.75) + (constants.cohort_ref[x].quantile(0.75) - constants.cohort_ref[x].quantile(0.25))*3)).any()], default=0)))
-
-            # Other features
-            columns_to_check = ['ploidy', 'hrd_loh', 'fraction_cna', 'avg_breakpoints_chr']
-            print("Is there any outlier in the other features? Min? ",[columns_to_check[i] for i in range(0,4) if [(ic10_data[x] < (constants.cohort_ref[x].quantile(0.25) - (constants.cohort_ref[x].quantile(0.75) - constants.cohort_ref[x].quantile(0.25))*3)).any() for x in columns_to_check][i]])
-            print("Is there any outlier in the other features? Max? ",[columns_to_check[i] for i in range(0,4) if [(ic10_data[x] > (constants.cohort_ref[x].quantile(0.75) + (constants.cohort_ref[x].quantile(0.75) - constants.cohort_ref[x].quantile(0.25))*3)).any() for x in columns_to_check][i]])
-
             # Bimodal features
             columns_to_check = ['genome_doubled', 'ER', 'HER2', 'WGS', 'WES']
             print("Are they bimodal? ",all([ic10_data[x].isin([0,1,4]).all() for x in columns_to_check]))
